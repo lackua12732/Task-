@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check List App</title>
+    <link rel="icon" type="image/x-icon" href="logo.jpg">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: black;
+            font-family: Arial, sans-serif;
+        }
+        
+        .top-bar {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            color: white;
+            z-index: 100;
+        }
+        .top-bar img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+        .top-bar .title {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .top-bar button {
+            background: lightblue;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .top-bar button:hover {
+            background: deepskyblue;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <img src="logo.jpg" alt="Logo">
+        <div class="title">made by Francesco Mora</div>
+        <button id="downloadBtn">Download</button>
+    </div>
+
+    <canvas id="particleCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("particleCanvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const numParticles = 350;
+        const mouse = { x: null, y: null };
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 2 + 2;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+                this.noiseX = Math.random() * 0.005 - 0.005;
+                this.noiseY = Math.random() * 0.005 - 0.005;
+                this.color = "white";
+                this.respawning = false;
+            }
+
+            move() {
+                let dx = mouse.x - this.x;
+                let dy = mouse.y - this.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 100) {
+                    this.color = "lightblue";
+                    let angle = Math.atan2(dy, dx);
+                    this.speedX += Math.cos(angle) * 0.5;
+                    this.speedY += Math.sin(angle) * 0.5;
+                    
+                    if (distance < 20) {
+                        this.speedX = -Math.cos(angle) * 15;
+                        this.speedY = -Math.sin(angle) * 15;
+                        this.x += this.speedX * 2;
+                        this.y += this.speedY * 2;
+                    }
+                } else {
+                    this.color = "white";
+                    this.speedX += this.noiseX;
+                    this.speedY += this.noiseY;
+                }
+                
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                this.speedX *= 0.95;
+                this.speedY *= 0.95;
+
+                if (this.isOutOfBounds() && !this.respawning) {
+                    this.respawn();
+                }
+            }
+
+            isOutOfBounds() {
+                return (
+                    this.x < -50 || this.x > canvas.width + 50 ||
+                    this.y < -50 || this.y > canvas.height + 50
+                );
+            }
+
+            respawn() {
+                this.respawning = true;
+                setTimeout(() => {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.speedX = Math.random() * 0.5 - 0.25;
+                    this.speedY = Math.random() * 0.5 - 0.25;
+                    this.respawning = false;
+                }, 1000);
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            for (let i = 0; i < numParticles; i++) {
+                let x = Math.random() * canvas.width;
+                let y = Math.random() * canvas.height;
+                particles.push(new Particle(x, y));
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(particle => {
+                particle.move();
+                particle.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener("mousemove", (event) => {
+            mouse.x = event.clientX;
+            mouse.y = event.clientY;
+        });
+
+        window.addEventListener("resize", () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        
+        document.getElementById("downloadBtn").addEventListener("click", () => {
+            // Replace with your GitHub file URL
+            const githubUrl = "https://github.com/ChescoV1/School-Project/raw/refs/heads/main/V1.0.0.zip";
+            window.open(githubUrl, "_blank");
+        });
+
+        initParticles();
+        animate();
+    </script>
+
+</body>
+</html>
